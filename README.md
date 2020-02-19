@@ -1,3 +1,5 @@
+![Concept](https://github.com/ARogovsky/terragrunt-template/raw/master/Project%20layout.png)
+
 # terragrunt-template
 Simple way for generate infrastructure projects in terragrunt layout style use ansible role
 
