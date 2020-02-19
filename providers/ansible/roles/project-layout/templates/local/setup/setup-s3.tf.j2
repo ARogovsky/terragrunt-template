@@ -1,0 +1,40 @@
+resource "aws_s3_bucket" "s3-setup" {
+  bucket = "{{ uniq_id }}"
+
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  force_destroy = true
+
+  tags = {
+    Project     = "{{ project_name }}"
+    Environment = "Setup {{ uniq_id }}"
+    Env         = "Setup"
+  }
+
+}
+
+resource "aws_s3_bucket_policy" "s3-policy" {
+  bucket = aws_s3_bucket.s3-setup.id
+
+  policy = <<POLICY
+{
+    "Version": "2008-10-17",
+    "Id": "ProtectionPolicy",
+    "Statement": [
+        {
+            "Sid": "ProtectionPolicy",
+            "Effect": "Deny",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": "s3:DeleteBucket",
+            "Resource": "arn:aws:s3:::{{ uniq_id }}"
+        }
+    ]
+}
+POLICY
+}

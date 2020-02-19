@@ -1,0 +1,6 @@
+---
+- name: a play that runs entirely on the ansible host
+  hosts: localhost
+  connection: local
+  roles:
+    - { role: project-layout }

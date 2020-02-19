@@ -1,0 +1,9 @@
+terraform {
+  backend "s3" {
+    bucket     = "{{ setup_bucket }}"
+    key        = "providers/local/setup"
+    region     = "{{ aws_region }}"
+    encrypt    = true
+    kms_key_id = "{{ setup_key }}"
+  }
+}
