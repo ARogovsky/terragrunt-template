@@ -20,7 +20,7 @@ Available variables are listed below, along with default values (see `defaults/m
     aws_iam_user: Name of IAM user who own this project
     project_name: Name of project
     project_output: Output directory for layout
-
+    project_id: Define if you want continue failed project (set existed top directory)
 
 Dependencies
 ------------

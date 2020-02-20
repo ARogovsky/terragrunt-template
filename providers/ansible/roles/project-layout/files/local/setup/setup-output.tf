@@ -5,3 +5,11 @@ output "bucket" {
 output "key" {
   value = module.setup_key.key_arn
 }
+
+output "terraform_role_name" {
+  value = module.terraform_role.this_iam_role_name
+}
+
+output "terraform_role" {
+  value = module.terraform_role.this_iam_role_arn
+}

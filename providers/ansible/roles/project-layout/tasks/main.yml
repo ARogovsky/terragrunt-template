@@ -1,68 +1,44 @@
 ---
 # tasks file for project-layout
-  - name: Set uniq id based on project name, account id and timestamp
+  - name: Get caller id
+    shell: aws sts get-caller-identity --query Arn --output text
+    register: executor
+  - name: Set caller_id to aws caller id  or executor_caller_id
     set_fact:
-      uniq_id: "{{ project_name }}-{{ aws_account}}-{{ ansible_date_time.epoch }}"
-  - name: Set setup path "{{ project_output }}/{{ uniq_id }}/setup"
+      caller_id: "{{ executor_caller_id  | default(executor.stdout) }}"
+  - name: Set pre uniq id based on project name, account id and timestamp
     set_fact:
-      setup_dir: "{{ project_output }}/{{ uniq_id }}/setup"
-  - name: Directory local setup for "{{ project_name }}" ver "{{ uniq_id }}"
+      pre_main_uniq_id: "{{ project_name }}-{{ aws_account}}-{{ ansible_date_time.epoch }}"
+  - name: Set uniq id to pre or variable project_id
+    set_fact:
+      main_uniq_id: "{{ project_id  | default(pre_main_uniq_id) }}"
+  - name: Set setup path "{{ project_output }}/{{ main_uniq_id }}/setup"
+    set_fact:
+      main_setup_dir: "{{ project_output }}/{{ main_uniq_id }}/setup"
+  - name: Directory local setup for "{{ project_name }}" ver "{{ main_uniq_id }}"
     file:
-      path: "{{ setup_dir }}"
+      path: "{{ main_setup_dir }}"
       state: directory
-  - name: S3 bucket
-    template:
-      src: local/setup/setup-s3.tf.j2
-      dest: "{{ setup_dir }}/s3.tf"
-  - name: IAM user
-    template:
-      src: local/setup/setup-iam.tf.j2
-      dest: "{{ setup_dir }}/iam.tf"
-  - name: AWS Provider
-    template:
-      src: local/setup/setup-provider.tf.j2
-      dest: "{{ setup_dir }}/provider.tf"
-  - name: KMS key
-    template:
-      src: local/setup/setup-kms.tf.j2
-      dest: "{{ setup_dir }}/kms.tf"
-  - name: TF Output
-    copy:
-      src: local/setup/setup-output.tf
-      dest: "{{ setup_dir }}/output.tf"
-  - name: Execute init
-    shell: terraform init
-    args:
-      chdir:  "{{ setup_dir }}"
-  - name: Execute plan
-    shell: terraform plan -out ../setup.plan
-    args:
-      chdir:  "{{ setup_dir }}"
-  - name: Execute apply
-    shell: terraform apply ../setup.plan
-    args:
-      chdir:  "{{ setup_dir }}"
-  - name: Register bucket
-    shell: terraform output bucket
-    args:
-      chdir:  "{{ setup_dir }}"
-    register: bucket
-  - name: Register key
-    shell: terraform output key
-    args:
-      chdir:  "{{ setup_dir }}"
-    register: key
-  - name: Set setup_bucket
+  - name: Set state path "{{ project_output }}/{{ main_uniq_id }}/providers"
     set_fact:
-      setup_bucket: "{{ bucket.stdout }}"
-  - name: Set setup_key
-    set_fact:
-      setup_key: "{{ key.stdout }}"
-  - name: Remote Backend for Phase 2
-    template:
-      src: local/setup/setup-backend.tf2
-      dest: "{{ setup_dir }}/backend.tf"
-  - name: Finishing Phase 2
-    shell: terraform init -force-copy
-    args:
-      chdir:  "{{ setup_dir }}"
+      main_state_dir: "{{ project_output }}/{{ main_uniq_id }}/providers"
+  - name: Directory state for "{{ project_name }}" ver "{{ main_uniq_id }}"
+    file:
+      path: "{{ main_state_dir }}"
+      state: directory
+  - name: Execute local setup tasks
+    import_tasks: "local-setup.yml"
+    vars:
+      uniq_id: "{{ main_uniq_id }}"
+      setup_dir: "{{ main_setup_dir }}"
+  - name: Execute terragrunt tasks
+    import_tasks: "terragrunt.yml"
+    vars:
+      uniq_id: "{{ main_uniq_id }}"
+      state_dir: "{{ main_state_dir }}"
+  - name: Execute setup IAM if skip_iam is undefined
+    import_tasks: "iam.yml"
+    vars:
+      uniq_id: "{{ main_uniq_id }}"
+      state_dir: "{{ main_state_dir }}"
+    when: skip_iam is undefined

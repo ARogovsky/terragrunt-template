@@ -5,3 +5,4 @@
     aws_iam_user: esupport
     project_name: example
     project_output: /tmp/example
+    terraform_remote_state_file_name: terraform.tfstate
