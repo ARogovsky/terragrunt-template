@@ -1,0 +1,8 @@
+---
+# vars file for project-layout
+    aws_region: us-east-1
+    aws_account: 012345678901
+    aws_iam_user: esupport
+    project_name: example
+    project_output: /tmp/example
+    terraform_remote_state_file_name: terraform.tfstate

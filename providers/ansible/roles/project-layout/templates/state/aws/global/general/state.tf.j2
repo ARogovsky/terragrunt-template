@@ -1,0 +1,11 @@
+data "terraform_remote_state" "{{ state_name }}" {
+  backend = "s3"
+
+  config = {
+    bucket     = "{{ setup_bucket }}"
+    key        = "{{ providers_key }}"
+    encrypt    = true
+    kms_key_id = "{{ setup_key }}"
+    region     = "{{ aws_region }}"
+  }
+}

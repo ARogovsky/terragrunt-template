@@ -1,0 +1,44 @@
+---
+# tasks file for project-layout
+  - name: Get caller id
+    shell: aws sts get-caller-identity --query Arn --output text
+    register: executor
+  - name: Set caller_id to aws caller id  or executor_caller_id
+    set_fact:
+      caller_id: "{{ executor_caller_id  | default(executor.stdout) }}"
+  - name: Set pre uniq id based on project name, account id and timestamp
+    set_fact:
+      pre_main_uniq_id: "{{ project_name }}-{{ aws_account}}-{{ ansible_date_time.epoch }}"
+  - name: Set uniq id to pre or variable project_id
+    set_fact:
+      main_uniq_id: "{{ project_id  | default(pre_main_uniq_id) }}"
+  - name: Set setup path "{{ project_output }}/{{ main_uniq_id }}/setup"
+    set_fact:
+      main_setup_dir: "{{ project_output }}/{{ main_uniq_id }}/setup"
+  - name: Directory local setup for "{{ project_name }}" ver "{{ main_uniq_id }}"
+    file:
+      path: "{{ main_setup_dir }}"
+      state: directory
+  - name: Set state path "{{ project_output }}/{{ main_uniq_id }}/providers"
+    set_fact:
+      main_state_dir: "{{ project_output }}/{{ main_uniq_id }}/providers"
+  - name: Directory state for "{{ project_name }}" ver "{{ main_uniq_id }}"
+    file:
+      path: "{{ main_state_dir }}"
+      state: directory
+  - name: Execute local setup tasks
+    import_tasks: "local-setup.yml"
+    vars:
+      uniq_id: "{{ main_uniq_id }}"
+      setup_dir: "{{ main_setup_dir }}"
+  - name: Execute terragrunt tasks
+    import_tasks: "terragrunt.yml"
+    vars:
+      uniq_id: "{{ main_uniq_id }}"
+      state_dir: "{{ main_state_dir }}"
+  - name: Execute setup IAM if skip_iam is undefined
+    import_tasks: "iam.yml"
+    vars:
+      uniq_id: "{{ main_uniq_id }}"
+      state_dir: "{{ main_state_dir }}"
+    when: skip_iam is undefined
