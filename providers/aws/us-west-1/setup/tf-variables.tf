@@ -1,0 +1,1 @@
+../../../../templates/setup/1-tf-variables.tf

@@ -1,0 +1,1 @@
+../../../../templates/aws/provider.tf

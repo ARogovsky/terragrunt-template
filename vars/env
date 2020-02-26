@@ -1,0 +1,6 @@
+TF_VAR_aws_region=us-west-1
+TF_VAR_aws_setup_bucket=terragrunt-layout-style-pure-bash-tf-state
+TF_VAR_project_name=terragrunt-layout
+TF_VAR_project_env=test
+TF_VAR_admin_user=admin
+TF_VAR_caller_id=$( aws sts get-caller-identity --query Arn --output text )
